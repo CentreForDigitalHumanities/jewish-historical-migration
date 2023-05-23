@@ -1,0 +1,3 @@
+create user jewish_historical_migration with createdb password 'jewish_historical_migration';
+create database jewish_historical_migration;
+grant all on database jewish_historical_migration to jewish_historical_migration;
