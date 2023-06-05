@@ -2,6 +2,7 @@ from pathlib import Path
 import requests
 import gzip
 import ijson
+import pickle
 
 from django.conf import settings
 
@@ -20,6 +21,8 @@ class PleiadesFetcher:
         try:
             self.pleiades_path = Path(settings.EXTERNAL_DATA_DIRECTORY) / \
                 'pleiades.json'
+            self.pleiades_pickle_path = \
+                Path(settings.EXTERNAL_DATA_DIRECTORY) / 'pleiades.pickle'
         except AttributeError:
             raise PleiadesError(
                 'EXTERNAL_DATA_DIRECTORY setting must be set in settings.py'
@@ -53,15 +56,15 @@ class PleiadesFetcher:
                 'Error while decompressing Pleiades file: {}'.format(err)
             )
 
-    def read_data(self) -> None:
+    def pickle_data(self) -> None:
         '''Read Pleiades data into memory to allow efficient access. Download
-        data if necessary.'''
+        data if necessary. Save as Pickle file.'''
         if not self.pleiades_path.exists():
             # Download if the file does not yet exist. In the future, perhaps
             # check if the data may need an update (the JSON file is updated
             # daily).
             self.download_dump()
-        print('Reading Pleiades data into memory...')
+        print('Converting all Pleiades data...')
         try:
             with open(self.pleiades_path, 'rb') as f:  # IJSON needs bin data
                 self._pleiades_data = {}
@@ -73,10 +76,21 @@ class PleiadesFetcher:
                     self._pleiades_data[pl_id] = {
                         'reprPoint': place['reprPoint']
                     }
+            with open(self.pleiades_pickle_path, 'wb') as f:
+                pickle.dump(self._pleiades_data, f)
         except (OSError, ijson.JSONERROR) as err:
             raise PleiadesError(
-                'Error while reading Pleiades file: {}'.format(err)
+                'Error while converting Pleiades file: {}'.format(err)
             )
+
+    def get_data(self) -> None:
+        '''Read Pleiades pickle file into memory; create it if it does not yet
+        exist'''
+        if self.pleiades_pickle_path.exists():
+            with open(self.pleiades_pickle_path, 'rb') as f:
+                self._pleiades_data = pickle.load(f)
+        else:
+            self.pickle_data()
 
     def reset(self) -> None:
         '''Reset this object so that memory is freed from all Pleiades data'''
@@ -86,7 +100,7 @@ class PleiadesFetcher:
         '''Fetch Pleiades data from one id. Download latest Pleiades JSON
         dump first if necessary.'''
         if self._pleiades_data is None:
-            self.read_data()
+            self.get_data()
         try:
             data = self._pleiades_data[pleiades_id]
         except KeyError:
