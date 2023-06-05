@@ -13,6 +13,7 @@ This is a server side web application based on [Django][1] and [Django REST fram
 You need to install the following software:
 
  - PostgreSQL >= 10, client, server and C libraries
+ - The PostGIS extension for PostgreSQL (version 3)
  - Python >= 3.8, <= 3.10
  - virtualenv
  - WSGI-compatible webserver (deployment only)
@@ -62,6 +63,25 @@ We need to install `psycopg2` with the `--no-binary` flag [until version 2.8 of 
 
 If you are overriding the default settings, you may pass `--pythonpath` and `--settings` arguments to every invocation of `python manage.py`. `--settings` should be the name of the module (without `.py`) with your settings overrides. `--pythonpath` should be the path to the directory with your overridden settings module.
 
+### Activating PostGIS
+
+The PostGIS extension needs to be enabled on the databases that Django is using, which are both the normal database and the testing databases. Activate the extension on a database as follows:
+
+```sql
+CREATE EXTENSION IF NOT EXISTS plpgsql;
+CREATE EXTENSION postgis;
+```
+
+However, since the testing databases are created on the fly by Django with every test run, the test databases also need this extension. Therefore, make a template called `template_postgis`, so that test databases can be based on that template:
+
+```sql
+CREATE DATABASE template_postgis;
+ALTER DATABASE template_postgis WITH is_template true;
+```
+
+Then, go inside the `template_postgis` database and activate the PostGIS extension on the template as well using the lines above. Django's `settings.py` is by default configured so that it uses this template for testing databases.
+
+Since the latter are created on the fly with every test run,
 
 ### Running the application (development server)
 
