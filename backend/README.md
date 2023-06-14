@@ -81,8 +81,6 @@ ALTER DATABASE template_postgis WITH is_template true;
 
 Then, go inside the `template_postgis` database and activate the PostGIS extension on the template as well using the lines above. Django's `settings.py` is by default configured so that it uses this template for testing databases.
 
-Since the latter are created on the fly with every test run,
-
 ### Running the application (development server)
 
 ```console
