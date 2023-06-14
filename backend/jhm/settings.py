@@ -36,10 +36,12 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'django.contrib.gis',
     'livereload',
     'django.contrib.staticfiles',
     'rest_framework',
     'revproxy',
+    'data',
 ]
 
 MIDDLEWARE = [
@@ -79,12 +81,15 @@ WSGI_APPLICATION = 'jhm.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
         'NAME': os.environ.get('PGDATABASE') or 'jewish_historical_migration',
         'USER': os.environ.get('PGUSER') or 'jewish_historical_migration',
         'PASSWORD': os.environ.get('PGPASSWORD') or 'jewish_historical_migration',
         'HOST': os.environ.get('PGHOST') or 'localhost',
         'PORT': os.environ.get('PGPORT') or '5432',
+        "TEST": {
+            "TEMPLATE": "template_postgis",
+        },
     }
 }
 
@@ -129,3 +134,6 @@ STATIC_URL = '/static/'
 
 STATICFILES_DIRS: List[str] = []
 PROXY_FRONTEND = None
+
+# The directory to save external data, such as Pleiades data
+EXTERNAL_DATA_DIRECTORY = BASE_DIR / 'external_data'
