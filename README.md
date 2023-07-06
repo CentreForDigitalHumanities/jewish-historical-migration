@@ -21,6 +21,22 @@ You need to install the following software:
 [1]: https://wiki.python.org/moin/WindowsCompilers
 [2]: https://pypi.org/project/selenium/#drivers
 
+## Setup with Docker
+Alternatively, you can run the application via Docker:
+1. Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) and start it.
+2. Make an .env file next to this README, which defines the configuration for the Postgres database.
+```
+SQL_HOST=db
+SQL_PORT=5432
+SQL_USER=jewishmigration
+SQL_DATABASE=jewishmigration
+SQL_PASSWORD=topsecret
+```
+3. Run `docker-compose up` from the directory of this README. This will pull images from the Docker registry and start containers based on these images. This will take a while to set up the first time. To stop, hit `ctrl-c`, run `docker-compose down` in another terminal, or use the Docker Desktop dashboard.
+4. If you need to reinstall libraries via pip or yarn, use `docker-compose up --build`.
+
+Note: you can also call the .env file .myenv and specify this during startup:
+`docker-compose --env-file .myenv up`
 
 ## How it works
 
