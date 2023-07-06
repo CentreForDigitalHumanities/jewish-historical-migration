@@ -1,23 +1,24 @@
 from pathlib import Path
+from os.path import join
 import tempfile
 import shutil
 
 from django.test import TestCase
 
 from .pleiades import PleiadesFetcher, PleiadesError
+from .models import Record
 
+TESTDATA_LOCATION = join(Path(__file__).parent, 'testdata')
 
 class PleiadesTest(TestCase):
-    TESTDATA_FILE = Path(__file__).parent / 'testdata' / 'pleiades.json'
+    TESTDATA_FILE =  join(TESTDATA_LOCATION, 'pleiades.json')
 
     def test_fetch(self):
         # Create a temporary directory for the external data dir and copy
         # the test data there to the location that PleiadesFetcher expects.
         # We are not testing downloading the file.
-        with (
-            tempfile.TemporaryDirectory() as datadir,
+        with tempfile.TemporaryDirectory() as datadir:
             self.settings(EXTERNAL_DATA_DIRECTORY=datadir)
-        ):
             # Initialize the fetcher and prepare the test data
             fetcher = PleiadesFetcher()
             datafile = shutil.copy(self.TESTDATA_FILE, datadir)
@@ -31,3 +32,10 @@ class PleiadesTest(TestCase):
             # Test if nonexisting ID raises error
             with self.assertRaises(PleiadesError):
                 fetcher.fetch(5)
+
+class RecordTest(TestCase):
+    TESTDATA_FILE = join(TESTDATA_LOCATION, 'SampleData.xlsx')
+
+    def test_data_import(self):
+        Record.import_dataset(self, self.TESTDATA_FILE)
+        assert Record.objects.count() == 3
