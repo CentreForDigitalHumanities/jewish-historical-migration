@@ -6,7 +6,7 @@ import shutil
 from django.test import TestCase
 
 from .pleiades import PleiadesFetcher, PleiadesError
-from .models import Record
+from .models import import_dataset, Record
 
 TESTDATA_LOCATION = join(Path(__file__).parent, 'testdata')
 
@@ -18,11 +18,11 @@ class PleiadesTest(TestCase):
         # the test data there to the location that PleiadesFetcher expects.
         # We are not testing downloading the file.
         with tempfile.TemporaryDirectory() as datadir:
-            self.settings(EXTERNAL_DATA_DIRECTORY=datadir)
-            # Initialize the fetcher and prepare the test data
-            fetcher = PleiadesFetcher()
-            datafile = shutil.copy(self.TESTDATA_FILE, datadir)
-            assert datafile == str(fetcher.pleiades_path)
+            with self.settings(EXTERNAL_DATA_DIRECTORY=datadir):
+                # Initialize the fetcher and prepare the test data
+                fetcher = PleiadesFetcher()
+                datafile = shutil.copy(self.TESTDATA_FILE, datadir)
+                assert datafile == str(fetcher.pleiades_path)
             # Test fetching an existing ID
             place = fetcher.fetch(48210386)
             self.assertTrue('reprPoint' in place)
@@ -37,5 +37,5 @@ class RecordTest(TestCase):
     TESTDATA_FILE = join(TESTDATA_LOCATION, 'SampleData.xlsx')
 
     def test_data_import(self):
-        Record.import_dataset(self, self.TESTDATA_FILE)
+        import_dataset(self.TESTDATA_FILE)
         assert Record.objects.count() == 3
