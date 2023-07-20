@@ -24,21 +24,21 @@ class Region(models.Model):
 class PlaceManager(models.Manager):
     def create_place(self, row_dict, location_sheet):
         area = region = None
-        if row_dict != None:
+        if row_dict.get('area'):
             area, created = Area.objects.get_or_create(name=row_dict['area'])
-        if row_dict != None:
+        if row_dict.get('province-region'):
             region, created = Region.objects.get_or_create(name=row_dict['province-region'])
         place, created = self.get_or_create(
             name=row_dict['placename'],
             area=area,
             region=region,
         )
-        place.pleiades_id = row_dict['pleiades']
+        place.pleiades_id = row_dict['pleiades'] if isinstance(row_dict['pleiades'], int) else None
         if place.pleiades_id:
             coordinates = place.fetch_from_pleiades()
         else:
             coordinates = place.fetch_from_document(location_sheet, row_dict['own id '])
-        if coordinates:
+        if coordinates and coordinates[0] and coordinates[1]:
             # Convert to point (longitude, latitude)
             point = Point(
                 float(coordinates[1]), float(coordinates[0])
@@ -86,7 +86,7 @@ class RecordManager(models.Manager):
         record.inscription_type = row['type2']
         record.period = row['period']
         record.centuries = row['centuries']
-        record.inscriptions_count = row['inscriptions-count']
+        record.inscriptions_count = row['inscriptions-count'] if isinstance(row['inscriptions-count'], int) else 0
         record.mentioned_placenames = row['mentioned placenames']
         record.symbol = row['mention religious symbol']
         record.comments = row['comments']
@@ -96,7 +96,7 @@ class RecordManager(models.Manager):
         return record
 
 class Record(models.Model):
-    record_identifier = models.CharField(max_length=100, unique=True)
+    record_identifier = models.CharField(max_length=255, unique=True)
     language = models.CharField(max_length=100, null=True, blank=True)
     place = models.ForeignKey(to=Place, null=True, blank=True, on_delete=models.SET_NULL)
     site_type = models.CharField(max_length=100, null=True, blank=True)
@@ -122,6 +122,9 @@ def import_dataset(input_file):
             keys = [cell for cell in row if cell]
             continue
         row_dict = {k: row[i] for i, k in enumerate(keys)}
+        if row_dict['source'] == None:
+            # do not register rows with empty source field
+            continue
         place = Place.objects.create_place(
             row_dict, sheet2
         )
