@@ -7,6 +7,7 @@ from django.test import TestCase
 
 from .pleiades import PleiadesFetcher, PleiadesError
 from .models import import_dataset, Record
+from .utils import to_decimal
 
 TESTDATA_LOCATION = join(Path(__file__).parent, 'testdata')
 
@@ -33,9 +34,26 @@ class PleiadesTest(TestCase):
             with self.assertRaises(PleiadesError):
                 fetcher.fetch(5)
 
+
 class RecordTest(TestCase):
     TESTDATA_FILE = join(TESTDATA_LOCATION, 'SampleData.xlsx')
 
     def test_data_import(self):
         import_dataset(self.TESTDATA_FILE)
         assert Record.objects.count() == 3
+
+
+class DecimalConversionTest(TestCase):
+
+    def test_conversion(self):
+        test_cases = [
+            "39˚39' 4''N",
+            "39˚ 39' 4''N",
+            "39˚ 15' N",
+            "39˚ 39' 4'' N",
+            "41.779˚N",
+            "39˚ 10; N"
+        ]
+        for t in test_cases:
+            assert to_decimal(t)
+
