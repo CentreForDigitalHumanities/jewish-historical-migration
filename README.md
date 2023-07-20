@@ -24,13 +24,14 @@ You need to install the following software:
 ## Setup with Docker
 Alternatively, you can run the application via Docker:
 1. Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) and start it.
-2. Make an .env file next to this README, which defines the configuration for the Postgres database.
+2. Make an .env file next to this README, which defines the configuration for the Postgres database, as well as the directory in which the source (Excel) data is located.
 ```
 SQL_HOST=db
 SQL_PORT=5432
 SQL_USER=jewishmigration
 SQL_DATABASE=jewishmigration
 SQL_PASSWORD=topsecret
+DATA_DIR=/location/of/source/data/on/your/machine
 ```
 3. Run `docker-compose up` from the directory of this README. This will pull images from the Docker registry and start containers based on these images. This will take a while to set up the first time. To stop, hit `ctrl-c`, run `docker-compose down` in another terminal, or use the Docker Desktop dashboard.
 4. If you need to reinstall libraries via pip or yarn, use `docker-compose up --build`.
