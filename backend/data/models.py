@@ -115,6 +115,9 @@ class Record(models.Model):
 
     objects = RecordManager()
 
+    def __str__(self):
+        return '{} ({})'.format(self.record_identifier, self.place)
+
 
 def import_dataset(input_file):
     wb = openpyxl.load_workbook(filename=input_file)
