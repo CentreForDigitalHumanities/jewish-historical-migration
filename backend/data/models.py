@@ -23,6 +23,9 @@ class Region(models.Model):
 
 class PlaceManager(models.Manager):
     def create_place(self, row_dict, location_sheet):
+        if row_dict['placename'] is None:
+            # No placename defined; do not create anything and return None
+            return None
         area = region = None
         if row_dict.get('area'):
             area, created = Area.objects.get_or_create(name=row_dict['area'])
