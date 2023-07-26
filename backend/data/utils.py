@@ -24,7 +24,7 @@ def to_decimal(x: str):
         # Invalid value; return None
         print('Warning: {} -> invalid coordinates'.format(x))
         return None
-    dec = int(float(d)) + int(m) / 60. + int(s) / 3600.
+    dec = int(float(d)) + int(float(m)) / 60. + int(float(s)) / 3600.
     if direc == 'W' or direc == 'S':
         dec = -dec
     return dec
