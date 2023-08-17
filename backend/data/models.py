@@ -1,3 +1,5 @@
+import uuid
+
 from django.db import models
 from django.contrib.gis.db import models as gismodels
 from django.contrib.gis.geos import Point
@@ -81,8 +83,9 @@ class RecordManager(models.Manager):
         """ given a row from the input file and a place,
         return a SettlementEvidence instance """
         record, created = self.get_or_create(
-            record_identifier=row['source']
+            id=row['id']
         )
+        record.source = row['source']
         record.language = row['language']
         record.place = place
         record.site_type = row['type1']
@@ -99,19 +102,23 @@ class RecordManager(models.Manager):
         return record
 
 class Record(models.Model):
-    record_identifier = models.CharField(max_length=255, unique=True)
-    language = models.CharField(max_length=100, null=True, blank=True)
+
+    def __str__(self):
+        return '{} {}'.format(self.source, self.place.name)  
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    source = models.CharField(max_length=255, unique=True)
+    language = models.CharField(max_length=100, blank=True, default='')
     place = models.ForeignKey(to=Place, null=True, blank=True, on_delete=models.SET_NULL)
-    site_type = models.CharField(max_length=100, null=True, blank=True)
-    inscription_type = models.CharField(max_length=100, null=True, blank=True)
-    period = models.CharField(verbose_name="Historical period", max_length=50, null=True, blank=True)
-    centuries = models.CharField(verbose_name="Estimated century/ies", max_length=20, null=True, blank=True)
+    site_type = models.CharField(max_length=100, blank=True, default='')
+    inscription_type = models.CharField(max_length=100, blank=True, default='')
+    period = models.CharField(verbose_name="Historical period", max_length=50, blank=True, default='')
+    centuries = models.CharField(verbose_name="Estimated century/ies", max_length=20, blank=True, default='')
     inscriptions_count = models.IntegerField(default=0)
-    mentioned_placenames = models.CharField(max_length=50, null=True, blank=True)
-    symbol = models.CharField(verbose_name="Religious symbol", max_length=100, null=True, blank=True)
-    comments = models.TextField(null=True, blank=True)
-    inscription = models.TextField(null=True, blank=True)
-    transcription = models.TextField(null=True, blank=True)
+    mentioned_placenames = models.CharField(max_length=50, blank=True, default='')
+    symbol = models.CharField(verbose_name="Religious symbol", max_length=100, blank=True, default='')
+    comments = models.TextField(blank=True, default='')
+    inscription = models.TextField(blank=True, default='')
+    transcription = models.TextField(blank=True, default='')
 
     objects = RecordManager()
 
