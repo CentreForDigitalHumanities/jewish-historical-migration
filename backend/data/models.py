@@ -83,21 +83,21 @@ class RecordManager(models.Manager):
         """ given a row from the input file and a place,
         return a SettlementEvidence instance """
         record, created = self.get_or_create(
-            id=row['id']
+            uuid=row['id']
         )
         record.source = row['source']
-        record.language = row['language']
+        record.language = row['language'] or ''
         record.place = place
-        record.site_type = row['type1']
-        record.inscription_type = row['type2']
-        record.period = row['period']
-        record.centuries = row['centuries']
+        record.site_type = row['category 1'] or ''
+        record.inscription_type = row['category 2'] or ''
+        record.period = row['period'] or ''
+        record.centuries = row['centuries'] or ''
         record.inscriptions_count = row['inscriptions-count'] if isinstance(row['inscriptions-count'], int) else 0
-        record.mentioned_placenames = row['mentioned placenames']
-        record.symbol = row['mention religious symbol']
-        record.comments = row['comments']
-        record.inscription = row['inscription']
-        record.transcription = row['transcription ']
+        record.mentioned_placenames = row['mentioned placenames'] or ''
+        record.symbol = row['mention religious symbol'] or ''
+        record.comments = row['comments'] or ''
+        record.inscription = row['inscription'] or ''
+        record.transcription = row['transcription '] or ''
         record.save()
         return record
 
@@ -105,8 +105,8 @@ class Record(models.Model):
 
     def __str__(self):
         return '{} {}'.format(self.source, self.place.name)  
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    source = models.CharField(max_length=255, unique=True)
+    uuid = models.UUIDField(default=uuid.uuid4, primary_key=True, unique=True, editable=False)
+    source = models.CharField(max_length=255, default='')
     language = models.CharField(max_length=100, blank=True, default='')
     place = models.ForeignKey(to=Place, null=True, blank=True, on_delete=models.SET_NULL)
     site_type = models.CharField(max_length=100, blank=True, default='')
