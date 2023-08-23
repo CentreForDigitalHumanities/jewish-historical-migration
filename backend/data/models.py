@@ -87,6 +87,7 @@ class RecordManager(models.Manager):
         )
         record.source = row['source']
         record.language = row['language'] or ''
+        record.script = row['script'] or ''
         record.place = place
         record.site_type = row['category 1'] or ''
         record.inscription_type = row['category 2'] or ''
@@ -94,6 +95,9 @@ class RecordManager(models.Manager):
         record.centuries = row['centuries'] or ''
         record.inscriptions_count = row['inscriptions-count'] if isinstance(row['inscriptions-count'], int) else 0
         record.mentioned_placenames = row['mentioned placenames'] or ''
+        record.religious_profession = row['mention religious profession'] or ''
+        record.sex_dedicator = row['sexe dedicator epitaph (male/female/child)'] or ''
+        record.sex_deceased = row['sexe of deceased (male/female/child)'] or ''
         record.symbol = row['mention religious symbol'] or ''
         record.comments = row['comments'] or ''
         record.inscription = row['inscription'] or ''
@@ -108,6 +112,7 @@ class Record(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, primary_key=True, unique=True, editable=False)
     source = models.CharField(max_length=255, default='')
     language = models.CharField(max_length=100, blank=True, default='')
+    script = models.CharField(max_length=100, blank=True, default='')
     place = models.ForeignKey(to=Place, null=True, blank=True, on_delete=models.SET_NULL)
     site_type = models.CharField(max_length=100, blank=True, default='')
     inscription_type = models.CharField(max_length=100, blank=True, default='')
@@ -115,6 +120,9 @@ class Record(models.Model):
     centuries = models.CharField(verbose_name="Estimated century/ies", max_length=20, blank=True, default='')
     inscriptions_count = models.IntegerField(default=0)
     mentioned_placenames = models.CharField(max_length=50, blank=True, default='')
+    religious_profession = models.CharField(max_length=100, blank=True, default='')
+    sex_dedicator = models.CharField(max_length=100, blank=True, default='')
+    sex_deceased = models.CharField(max_length=100, blank=True, default='')
     symbol = models.CharField(verbose_name="Religious symbol", max_length=100, blank=True, default='')
     comments = models.TextField(blank=True, default='')
     inscription = models.TextField(blank=True, default='')
