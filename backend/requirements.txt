@@ -6,6 +6,7 @@
 #
 --no-binary psycopg2
 
+backports.zoneinfo;python_version<"3.9"
 asgiref==3.7.2
     # via django
 beautifulsoup4==4.12.2
@@ -26,6 +27,8 @@ django-revproxy==0.10.0
     # via -r requirements.in
 djangorestframework==3.14.0
     # via -r requirements.in
+et-xmlfile==1.1.0
+    # via openpyxl
 execnet==1.9.0
     # via pytest-xdist
 idna==3.4
@@ -34,6 +37,8 @@ ijson==3.2.0.post0
     # via -r requirements.in
 iniconfig==2.0.0
     # via pytest
+openpyxl==3.1.2
+    # via -r requirements.in
 packaging==23.1
     # via pytest
 pluggy==1.0.0
