@@ -83,9 +83,9 @@ class RecordManager(models.Manager):
         """ given a row from the input file and a place,
         return a SettlementEvidence instance """
         record, created = self.get_or_create(
-            uuid=row['id']
+            identifier=row['id'],
+            source = row['source']
         )
-        record.source = row['source']
         record.language = row['language'] or ''
         record.script = row['script'] or ''
         record.place = place
@@ -108,8 +108,9 @@ class RecordManager(models.Manager):
 class Record(models.Model):
 
     def __str__(self):
-        return '{} {}'.format(self.source, self.place.name)  
-    uuid = models.UUIDField(default=uuid.uuid4, primary_key=True, unique=True, editable=False)
+        return '{} {}'.format(self.source, self.place.name)
+
+    identifier = models.IntegerField(default=1)
     source = models.CharField(max_length=255, default='')
     language = models.CharField(max_length=100, blank=True, default='')
     script = models.CharField(max_length=100, blank=True, default='')
@@ -130,9 +131,8 @@ class Record(models.Model):
 
     objects = RecordManager()
 
-    def __str__(self):
-        return '{} ({})'.format(self.record_identifier, self.place)
-
+    class Meta:
+        unique_together = [['identifier', 'source']]
 
 def import_dataset(input_file):
     wb = openpyxl.load_workbook(filename=input_file)
