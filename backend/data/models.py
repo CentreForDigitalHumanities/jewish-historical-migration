@@ -112,19 +112,19 @@ class Record(models.Model):
 
     identifier = models.IntegerField(default=1)
     source = models.CharField(max_length=255, default='')
-    language = models.CharField(max_length=100, blank=True, default='')
-    script = models.CharField(max_length=100, blank=True, default='')
+    language = models.CharField(max_length=250, blank=True, default='')
+    script = models.CharField(max_length=255, blank=True, default='')
     place = models.ForeignKey(to=Place, null=True, blank=True, on_delete=models.SET_NULL)
-    site_type = models.CharField(max_length=100, blank=True, default='')
-    inscription_type = models.CharField(max_length=100, blank=True, default='')
-    period = models.CharField(verbose_name="Historical period", max_length=50, blank=True, default='')
-    centuries = models.CharField(verbose_name="Estimated century/ies", max_length=20, blank=True, default='')
+    site_type = models.CharField(max_length=255, blank=True, default='')
+    inscription_type = models.CharField(max_length=255, blank=True, default='')
+    period = models.CharField(verbose_name="Historical period", max_length=255, blank=True, default='')
+    centuries = models.CharField(verbose_name="Estimated century/ies", max_length=255, blank=True, default='')
     inscriptions_count = models.IntegerField(default=0)
-    mentioned_placenames = models.CharField(max_length=50, blank=True, default='')
-    religious_profession = models.CharField(max_length=100, blank=True, default='')
-    sex_dedicator = models.CharField(max_length=100, blank=True, default='')
-    sex_deceased = models.CharField(max_length=100, blank=True, default='')
-    symbol = models.CharField(verbose_name="Religious symbol", max_length=100, blank=True, default='')
+    mentioned_placenames = models.CharField(max_length=255, blank=True, default='')
+    religious_profession = models.CharField(max_length=255, blank=True, default='')
+    sex_dedicator = models.CharField(max_length=255, blank=True, default='')
+    sex_deceased = models.CharField(max_length=255, blank=True, default='')
+    symbol = models.CharField(verbose_name="Religious symbol", max_length=255, blank=True, default='')
     comments = models.TextField(blank=True, default='')
     inscription = models.TextField(blank=True, default='')
     transcription = models.TextField(blank=True, default='')
@@ -136,7 +136,7 @@ class Record(models.Model):
 
 def import_dataset(input_file):
     wb = openpyxl.load_workbook(filename=input_file)
-    sheet = wb['Data MJHM']
+    sheet = wb['Data JewishMigration']
     sheet2 = wb['ID settlements without Pleiades']
     for index, row in enumerate(sheet.values):
         if index == 0:
