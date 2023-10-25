@@ -30,7 +30,7 @@ services:
       PGHOST: $SQL_HOST
       PGPORT: $SQL_PORT
     ports:
-      - 127.0.0.1:8000:8000
+      - 127.0.0.1:8100:8000
     volumes:
       - type: bind
         source: ./backend
