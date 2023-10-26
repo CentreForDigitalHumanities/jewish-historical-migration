@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Callable, List, Optional
 import uuid
 import logging
 
@@ -12,6 +12,21 @@ from .pleiades import PleiadesError, pleiades_fetcher
 from .utils import to_decimal
 
 logger = logging.getLogger(__name__)
+
+SEX_REPLACEMENTS = {
+    "Female": "female",
+    "Male": "male",
+    "Child (Female)": "female-child",
+    "Child (Male)": "male-child",
+    "Child": "child"
+}
+
+
+def normalize_sex(input_str: str) -> list[str]:
+    """Normalize data about sex and age and give back as list of strings."""
+    # Sex is given such as here: 'Male|Female| Child (Female)| Child (Female)'
+    items = input_str.split("|")
+    return [SEX_REPLACEMENTS.get(x.strip(), x) for x in items]
 
 
 class Area(models.Model):
@@ -50,8 +65,8 @@ class PlaceManager(models.Manager):
             if not coordinates:
                 # Not found in Pleiades. Give a warning and continue
                 logger.warning(
-                    f"Pleiades ID {place.pleiades_id} not found. Taking "
-                    "information from document instead."
+                    f"Cannot find coordinates for pleiades ID {place.pleiades_id}. "
+                    "Taking information from document instead."
                 )
         if coordinates is None:
             coordinates = place.fetch_from_document(location_sheet, row_dict['own id '])
@@ -85,6 +100,11 @@ class Place(models.Model):
         pleiades_info = pleiades_fetcher.fetch(self.pleiades_id)
         if pleiades_info:
             reprpoint = pleiades_info['reprPoint']
+            if not reprpoint:
+                logger.warning(
+                    f"Pleiades object {self.pleiades_id} found but it has no "
+                    "coordinates."
+                )
             return reprpoint
         else:
             # Not found
@@ -107,22 +127,54 @@ class RecordManager(models.Manager):
             identifier=row['id'],
             source = row['source']
         )
-        record.language = row['language'] or ''
-        record.script = row['script'] or ''
         record.place = place
-        record.site_type = row['category 1'] or ''
-        record.inscription_type = row['category 2'] or ''
+
+        # Apply simple string or integer mappings
         record.period = row['period'] or ''
-        record.centuries = row['centuries'] or ''
         record.inscriptions_count = row['inscriptions-count'] if isinstance(row['inscriptions-count'], int) else 0
         record.mentioned_placenames = row['mentioned placenames'] or ''
         record.religious_profession = row['mention religious profession'] or ''
-        record.sex_dedicator = row['sexe dedicator epitaph (male/female/child)'] or ''
-        record.sex_deceased = row['sexe of deceased (male/female/child)'] or ''
         record.symbol = row['mention religious symbol'] or ''
         record.comments = row['comments'] or ''
         record.inscription = row['inscription'] or ''
         record.transcription = row['transcription '] or ''
+
+        sex_dedicator_text = row['sexe dedicator epitaph (male/female/child)']
+        if sex_dedicator_text:
+            record.sex_dedicator = ', '.join(normalize_sex(sex_dedicator_text))
+        sex_deceased_text = row['sexe of deceased (male/female/child)']
+        if sex_deceased_text:
+            record.sex_deceased = ', '.join(normalize_sex(sex_deceased_text))
+
+        # Apply mappings for which a single objects is selected or created
+        category1text = row['category 1']
+        if category1text:
+            record.category1 = PrimaryCategory.objects.create_record(row['category 1'])
+        category2text = row['category 2']
+        if category2text:
+            record.category2 = SecondaryCategory.objects.create_record(row['category 2'])
+
+        # Same, but with multiple objects
+        language_text = row['language']
+        if language_text:
+            record.languages.set(Language.objects.create_records(
+                language_text,
+                '|'
+            ))
+        script_text = row['script']
+        if script_text:
+            record.scripts.set(Script.objects.create_records(
+                script_text,
+                '|'
+            ))
+        centuries_text = row['centuries']
+        if centuries_text:
+            record.estimated_centuries.set(Century.objects.create_records(
+                centuries_text,
+                '|',
+                (lambda x: '-' + x[:-1] if x.endswith('-') else x)
+            ))
+
         record.save()
         return record
 
@@ -135,13 +187,13 @@ class Record(models.Model):
 
     identifier = models.IntegerField(default=1)
     source = models.CharField(max_length=255, default='')
-    language = models.CharField(max_length=250, blank=True, default='')
-    script = models.CharField(max_length=255, blank=True, default='')
+    languages = models.ManyToManyField("Language")
+    scripts = models.ManyToManyField("Script")
     place = models.ForeignKey(to=Place, null=True, blank=True, on_delete=models.SET_NULL)
-    site_type = models.CharField(max_length=255, blank=True, default='')
-    inscription_type = models.CharField(max_length=255, blank=True, default='')
+    category1 = models.ForeignKey(to="PrimaryCategory", null=True, blank=True, on_delete=models.SET_NULL)
+    category2 = models.ForeignKey(to="SecondaryCategory", null=True, blank=True, on_delete=models.SET_NULL)
     period = models.CharField(verbose_name="Historical period", max_length=255, blank=True, default='')
-    centuries = models.CharField(verbose_name="Estimated century/ies", max_length=255, blank=True, default='')
+    estimated_centuries = models.ManyToManyField("Century", verbose_name="Estimated century/ies")
     inscriptions_count = models.IntegerField(default=0)
     mentioned_placenames = models.CharField(max_length=255, blank=True, default='')
     religious_profession = models.CharField(max_length=255, blank=True, default='')
@@ -157,21 +209,79 @@ class Record(models.Model):
     class Meta:
         unique_together = [['identifier', 'source']]
 
+
+class ChoiceFieldManager(models.Manager):
+    def create_records(
+            self, value: str, splitter: str, transformer: Optional[Callable] = None
+    ) -> List["BaseChoiceField"]:
+        value = str(value)
+        entries = value.split(splitter)
+        # Return a list of records by applying create_record() to each entry.
+        return [self.create_record(x, transformer) for x in entries]
+
+    def create_record(
+            self, value: str, transformer: Optional[Callable[[str], str]] = None
+    ) -> "BaseChoiceField":
+        value = str(value)
+        if transformer:
+            value = transformer(value)
+        value = value.strip()
+        record, _ = self.model.objects.get_or_create(name=value)
+        record.name = value
+        record.save()
+        return record
+
+
+class BaseChoiceField(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+
+    objects = ChoiceFieldManager()
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        abstract = True
+
+
+class PrimaryCategory(BaseChoiceField):
+    pass
+
+
+class SecondaryCategory(BaseChoiceField):
+    pass
+
+
+class Language(BaseChoiceField):
+    pass
+
+
+class Script(BaseChoiceField):
+    pass
+
+
+class Century(BaseChoiceField):
+    pass
+
+
 def import_dataset(input_file):
     wb = openpyxl.load_workbook(filename=input_file)
     sheet = wb['Data JewishMigration']
     sheet2 = wb['ID settlements without Pleiades']
+    source_empty = False
     for index, row in enumerate(sheet.values):
-        print(index, index>5000)
-        if index > 2000:
-            break
         if index == 0:
             keys = [cell for cell in row if cell]
             continue
         row_dict = {k: row[i] for i, k in enumerate(keys)}
         if row_dict['source'] == None:
             # do not register rows with empty source field
-            continue
+            # if previous row had empty source field too, stop reading
+            if source_empty:
+                break
+            else:
+                source_empty = True
+                continue
         place = Place.objects.create_place(
             row_dict, sheet2
         )
