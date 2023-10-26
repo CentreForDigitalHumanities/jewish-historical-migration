@@ -1,4 +1,6 @@
+from typing import List, Optional
 import uuid
+import logging
 
 from django.db import models
 from django.contrib.gis.db import models as gismodels
@@ -6,8 +8,11 @@ from django.contrib.gis.geos import Point
 
 import openpyxl
 
-from .pleiades import pleiades_fetcher
+from .pleiades import PleiadesError, pleiades_fetcher
 from .utils import to_decimal
+
+logger = logging.getLogger(__name__)
+
 
 class Area(models.Model):
     name = models.CharField(max_length=100)
@@ -39,9 +44,16 @@ class PlaceManager(models.Manager):
             region=region,
         )
         place.pleiades_id = row_dict['pleiades'] if isinstance(row_dict['pleiades'], int) else None
+        coordinates = None
         if place.pleiades_id:
             coordinates = place.fetch_from_pleiades()
-        else:
+            if not coordinates:
+                # Not found in Pleiades. Give a warning and continue
+                logger.warning(
+                    f"Pleiades ID {place.pleiades_id} not found. Taking "
+                    "information from document instead."
+                )
+        if coordinates is None:
             coordinates = place.fetch_from_document(location_sheet, row_dict['own id '])
         if coordinates and coordinates[0] and coordinates[1]:
             # Convert to point (longitude, latitude)
@@ -68,9 +80,15 @@ class Place(models.Model):
     def __str__(self):
         return self.name
 
-    def fetch_from_pleiades(self):
+    def fetch_from_pleiades(self) -> Optional[List[float]]:
         ''' get Pleiades coordinates (latitude, longitude) '''
-        return pleiades_fetcher.fetch(self.pleiades_id)['reprPoint']
+        pleiades_info = pleiades_fetcher.fetch(self.pleiades_id)
+        if pleiades_info:
+            reprpoint = pleiades_info['reprPoint']
+            return reprpoint
+        else:
+            # Not found
+            return None
     
     def fetch_from_document(self, location_sheet, identifier):
         ''' return coordinates from sheet with location info:
@@ -79,9 +97,12 @@ class Place(models.Model):
         return next(((to_decimal(row[4]), to_decimal(row[5])) for row in location_sheet.values if row[0] == identifier), None)
     
 class RecordManager(models.Manager):
-    def create_record(self, row, place):
+    def create_record(self, row, place) -> Optional['Record']:
         """ given a row from the input file and a place,
         return a SettlementEvidence instance """
+        if row['id'] is None or row['id'] == '':
+            logger.warning('Ignoring row with empty id column')
+            return None
         record, created = self.get_or_create(
             identifier=row['id'],
             source = row['source']
@@ -108,7 +129,9 @@ class RecordManager(models.Manager):
 class Record(models.Model):
 
     def __str__(self):
-        return '{} {}'.format(self.source, self.place.name)
+        source = self.source if self.source else "(unknown source"
+        name = self.place.name if self.place and self.place.name else "(unknown place)"
+        return '{} {}'.format(source, name)
 
     identifier = models.IntegerField(default=1)
     source = models.CharField(max_length=255, default='')
@@ -139,6 +162,9 @@ def import_dataset(input_file):
     sheet = wb['Data JewishMigration']
     sheet2 = wb['ID settlements without Pleiades']
     for index, row in enumerate(sheet.values):
+        print(index, index>5000)
+        if index > 2000:
+            break
         if index == 0:
             keys = [cell for cell in row if cell]
             continue
@@ -152,6 +178,5 @@ def import_dataset(input_file):
         Record.objects.create_record(
             row_dict, place
         )
-            
 
     

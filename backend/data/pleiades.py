@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 import requests
 import gzip
 import ijson
@@ -14,7 +15,7 @@ class PleiadesError(RuntimeError):
 class PleiadesFetcher:
     PLEIADES_URL = 'https://atlantides.org/downloads/pleiades/json/' \
         'pleiades-places-latest.json.gz'
-    _pleiades_data: dict = None
+    _pleiades_data: Optional[dict] = None
     pleiades_path: Path
 
     def __init__(self):
@@ -96,17 +97,16 @@ class PleiadesFetcher:
         '''Reset this object so that memory is freed from all Pleiades data'''
         self._pleiades_data = None
 
-    def fetch(self, pleiades_id: int) -> dict:
+    def fetch(self, pleiades_id: int) -> Optional[dict]:
         '''Fetch Pleiades data from one id. Download latest Pleiades JSON
-        dump first if necessary.'''
+        dump first if necessary. Return None if not found.'''
         if self._pleiades_data is None:
             self.get_data()
+        assert self._pleiades_data is not None
         try:
             data = self._pleiades_data[pleiades_id]
         except KeyError:
-            raise PleiadesError(
-                'Pleiades key {} not found'.format(pleiades_id)
-            )
+            return None
         return data
 
 
