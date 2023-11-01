@@ -22,7 +22,7 @@ SEX_REPLACEMENTS = {
 }
 
 
-def normalize_sex(input_str: str) -> list[str]:
+def normalize_sex(input_str: str) -> List[str]:
     """Normalize data about sex and age and give back as list of strings."""
     # Sex is given such as here: 'Male|Female| Child (Female)| Child (Female)'
     items = input_str.split("|")
