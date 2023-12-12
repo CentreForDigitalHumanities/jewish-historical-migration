@@ -97,6 +97,8 @@ class Place(models.Model):
 
     def fetch_from_pleiades(self) -> Optional[List[float]]:
         ''' get Pleiades coordinates (latitude, longitude) '''
+        if not self.pleiades_id:
+            return None
         pleiades_info = pleiades_fetcher.fetch(self.pleiades_id)
         if pleiades_info:
             reprpoint = pleiades_info['reprPoint']
