@@ -126,7 +126,6 @@ class RecordManager(models.Manager):
             logger.warning('Ignoring row with empty id column')
             return None
         record, created = self.get_or_create(
-            identifier=row['id'],
             source = row['source']
         )
         record.place = place
@@ -187,8 +186,7 @@ class Record(models.Model):
         name = self.place.name if self.place and self.place.name else "(unknown place)"
         return '{} {}'.format(source, name)
 
-    identifier = models.IntegerField(default=1)
-    source = models.CharField(max_length=255, default='')
+    source = models.CharField(max_length=255, unique=True)
     languages = models.ManyToManyField("Language")
     scripts = models.ManyToManyField("Script")
     place = models.ForeignKey(to=Place, null=True, blank=True, on_delete=models.SET_NULL)
@@ -207,9 +205,6 @@ class Record(models.Model):
     transcription = models.TextField(blank=True, default='')
 
     objects = RecordManager()
-
-    class Meta:
-        unique_together = [['identifier', 'source']]
 
 
 class ChoiceFieldManager(models.Manager):

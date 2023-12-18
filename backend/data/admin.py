@@ -32,13 +32,13 @@ class RegionAdmin(admin.ModelAdmin):
 @admin.register(Record)
 class RecordAdmin(admin.ModelAdmin):
     list_display = [
-        'identifier', 'source', 'place', 'category1', 
+        'source', 'place', 'category1', 
         'category2', 'period', 'inscriptions_count'
     ]
     list_filter = [
         'category1', 'category2'
     ]
-    ordering = ['identifier']
+    ordering = ['source']
 
 
 admin.site.register(PrimaryCategory)
