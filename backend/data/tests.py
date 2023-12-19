@@ -6,7 +6,7 @@ import pytest
 
 from django.test import TestCase
 
-from .pleiades import PleiadesFetcher, PleiadesError
+from .pleiades import PleiadesFetcher
 from .models import Century, import_dataset, Record
 from .utils import to_decimal
 

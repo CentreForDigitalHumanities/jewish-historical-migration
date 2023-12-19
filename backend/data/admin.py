@@ -1,4 +1,3 @@
-from typing import Optional
 from django.contrib import admin
 
 from .models import (

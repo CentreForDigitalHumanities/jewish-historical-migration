@@ -1,5 +1,4 @@
 from typing import Callable, List, Optional
-import uuid
 import logging
 
 from django.db import models
@@ -8,7 +7,7 @@ from django.contrib.gis.geos import Point
 
 import openpyxl
 
-from .pleiades import PleiadesError, pleiades_fetcher
+from .pleiades import pleiades_fetcher
 from .utils import to_decimal
 
 logger = logging.getLogger(__name__)
@@ -338,7 +337,7 @@ def import_dataset(input_file):
             keys = [cell for cell in row if cell]
             continue
         row_dict = {k: row[i] for i, k in enumerate(keys)}
-        if row_dict['source'] == None:
+        if row_dict['source'] is None:
             # do not register rows with empty source field
             # if previous row had empty source field too, stop reading
             if source_empty:

@@ -1,5 +1,3 @@
-import logging
-from datetime import datetime
 from django.core.management import BaseCommand
 
 from data.models import import_dataset
