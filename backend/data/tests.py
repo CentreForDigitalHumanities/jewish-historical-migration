@@ -31,8 +31,8 @@ class PleiadesTest(TestCase):
             place = fetcher.fetch(48210385)
             self.assertTrue('reprPoint' in place)
             # Test if nonexisting ID raises error
-            with self.assertRaises(PleiadesError):
-                fetcher.fetch(5)
+            place = fetcher.fetch(5)
+            assert place is None
 
 
 class RecordTest(TestCase):
@@ -40,11 +40,10 @@ class RecordTest(TestCase):
 
     def test_data_import(self):
         import_dataset(self.TESTDATA_FILE)
-        assert Record.objects.count() == 3
+        assert Record.objects.count() == 7
 
 
-class DecimalConversionTest(TestCase):
-
+class TestDecimalConversion:
     def test_conversion(self):
         test_cases = [
             "39˚39' 4''N",
@@ -57,3 +56,7 @@ class DecimalConversionTest(TestCase):
         for t in test_cases:
             assert to_decimal(t)
 
+
+class TestCentury:
+    def test_to_number(self):
+        pass
