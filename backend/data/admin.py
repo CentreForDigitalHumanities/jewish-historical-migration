@@ -1,3 +1,4 @@
+from typing import Optional
 from django.contrib import admin
 
 from .models import (
@@ -32,12 +33,14 @@ class RegionAdmin(admin.ModelAdmin):
 @admin.register(Record)
 class RecordAdmin(admin.ModelAdmin):
     list_display = [
-        'source', 'place', 'category1', 
+        'source', 'area', 'region', 'place', 'category1', 
         'category2', 'period', 'inscriptions_count'
     ]
     list_filter = [
+        'area', 'region', 'estimated_centuries', 'languages', 'scripts', 
         'category1', 'category2'
     ]
+    list_select_related = ["place", "category1", "category2"]
     ordering = ['source']
 
 
