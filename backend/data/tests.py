@@ -2,11 +2,12 @@ from pathlib import Path
 from os.path import join
 import tempfile
 import shutil
+import pytest
 
 from django.test import TestCase
 
 from .pleiades import PleiadesFetcher, PleiadesError
-from .models import import_dataset, Record
+from .models import Century, import_dataset, Record
 from .utils import to_decimal
 
 TESTDATA_LOCATION = join(Path(__file__).parent, 'testdata')
@@ -58,5 +59,28 @@ class TestDecimalConversion:
 
 
 class TestCentury:
-    def test_to_number(self):
-        pass
+    def test_to_number_negative(self):
+        assert Century._to_number("-3") == -3
+
+    def test_to_number_positive(self):
+        assert Century._to_number("3") == 3
+    
+    def test_to_number_unknown(self):
+        assert Century._to_number("unknown") is None
+
+    def test_to_number_invalid(self):
+        with pytest.raises(ValueError):
+            Century._to_number("hallo")
+
+    @pytest.mark.django_db
+    def test_save(self):
+        century = Century(name="-3")
+        century.save()
+        assert century.century_number == -3
+
+    @pytest.mark.django_db
+    def test_save_invalid(self):
+        century = Century(name="hallo")
+        century.save()
+        # Saving should never cause exception
+        assert century.century_number is None
