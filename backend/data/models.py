@@ -1,5 +1,4 @@
 from typing import Callable, List, Optional
-import uuid
 import logging
 
 from django.db import models
@@ -8,7 +7,7 @@ from django.contrib.gis.geos import Point
 
 import openpyxl
 
-from .pleiades import PleiadesError, pleiades_fetcher
+from .pleiades import pleiades_fetcher
 from .utils import to_decimal
 
 logger = logging.getLogger(__name__)
@@ -45,19 +44,28 @@ class Region(models.Model):
 
 class PlaceManager(models.Manager):
     def create_place(self, row_dict, location_sheet):
-        if row_dict['placename'] is None:
+        placename = row_dict['placename']
+        if placename is None:
             # No placename defined; do not create anything and return None
             return None
+        else:
+            placename = placename.strip()
         area = region = None
         if row_dict.get('area'):
-            area, created = Area.objects.get_or_create(name=row_dict['area'])
+            areastr = row_dict.get('area').strip()
+            area, created = Area.objects.get_or_create(name=areastr)
         if row_dict.get('province-region'):
-            region, created = Region.objects.get_or_create(name=row_dict['province-region'])
+            regionstr = row_dict.get('province-region').strip()
+            region, created = Region.objects.get_or_create(name=regionstr)
         place, created = self.get_or_create(
             name=row_dict['placename'],
             area=area,
             region=region,
         )
+        if not created:
+            # Data for one place should always be the same, so there
+            # is no reason to repeat this process
+            return place
         place.pleiades_id = row_dict['pleiades'] if isinstance(row_dict['pleiades'], int) else None
         coordinates = None
         if place.pleiades_id:
@@ -91,12 +99,15 @@ class Place(models.Model):
     pleiades_id = models.IntegerField(null=True, blank=True)
         
     objects = PlaceManager()
+    records: models.Manager["Record"]
 
     def __str__(self):
         return self.name
 
     def fetch_from_pleiades(self) -> Optional[List[float]]:
         ''' get Pleiades coordinates (latitude, longitude) '''
+        if not self.pleiades_id:
+            return None
         pleiades_info = pleiades_fetcher.fetch(self.pleiades_id)
         if pleiades_info:
             reprpoint = pleiades_info['reprPoint']
@@ -115,6 +126,15 @@ class Place(models.Model):
         latitute in column 4, longitude in column 5
         '''
         return next(((to_decimal(row[4]), to_decimal(row[5])) for row in location_sheet.values if row[0] == identifier), None)
+
+    def save(self, *args, **kwargs) -> None:
+        super().save(*args, **kwargs)
+        # Run save also on related records to update their region and area
+        for record in self.records.all():
+            record.save()
+
+    class Meta:
+        ordering = ["name"]
     
 class RecordManager(models.Manager):
     def create_record(self, row, place) -> Optional['Record']:
@@ -124,7 +144,6 @@ class RecordManager(models.Manager):
             logger.warning('Ignoring row with empty id column')
             return None
         record, created = self.get_or_create(
-            identifier=row['id'],
             source = row['source']
         )
         record.place = place
@@ -185,29 +204,34 @@ class Record(models.Model):
         name = self.place.name if self.place and self.place.name else "(unknown place)"
         return '{} {}'.format(source, name)
 
-    identifier = models.IntegerField(default=1)
-    source = models.CharField(max_length=255, default='')
+    source = models.CharField(max_length=255, unique=True)
     languages = models.ManyToManyField("Language")
     scripts = models.ManyToManyField("Script")
-    place = models.ForeignKey(to=Place, null=True, blank=True, on_delete=models.SET_NULL)
-    category1 = models.ForeignKey(to="PrimaryCategory", null=True, blank=True, on_delete=models.SET_NULL)
-    category2 = models.ForeignKey(to="SecondaryCategory", null=True, blank=True, on_delete=models.SET_NULL)
-    period = models.CharField(verbose_name="Historical period", max_length=255, blank=True, default='')
-    estimated_centuries = models.ManyToManyField("Century", verbose_name="Estimated century/ies")
+    place = models.ForeignKey(to=Place, null=True, blank=True, on_delete=models.SET_NULL, related_name="records")
+    category1 = models.ForeignKey(verbose_name="primary category", to="PrimaryCategory", null=True, blank=True, on_delete=models.SET_NULL)
+    category2 = models.ForeignKey(verbose_name="secondary category", to="SecondaryCategory", null=True, blank=True, on_delete=models.SET_NULL)
+    period = models.CharField(verbose_name="historical period", max_length=255, blank=True, default='')
+    estimated_centuries = models.ManyToManyField("Century", verbose_name="estimated centuries")
     inscriptions_count = models.IntegerField(default=0)
     mentioned_placenames = models.CharField(max_length=255, blank=True, default='')
     religious_profession = models.CharField(max_length=255, blank=True, default='')
     sex_dedicator = models.CharField(max_length=255, blank=True, default='')
     sex_deceased = models.CharField(max_length=255, blank=True, default='')
-    symbol = models.CharField(verbose_name="Religious symbol", max_length=255, blank=True, default='')
+    symbol = models.CharField(verbose_name="religious symbol", max_length=255, blank=True, default='')
     comments = models.TextField(blank=True, default='')
     inscription = models.TextField(blank=True, default='')
     transcription = models.TextField(blank=True, default='')
 
+    # Non-editable fields for quick lookup
+    area = models.CharField(max_length=100, editable=False, null=True)
+    region = models.CharField(max_length=100, editable=False, null=True)
+
     objects = RecordManager()
 
-    class Meta:
-        unique_together = [['identifier', 'source']]
+    def save(self, *args, **kwargs) -> None:
+        self.area = str(self.place.area) if self.place else None
+        self.region = str(self.place.region) if self.place else None
+        return super().save(*args, **kwargs)
 
 
 class ChoiceFieldManager(models.Manager):
@@ -242,14 +266,19 @@ class BaseChoiceField(models.Model):
 
     class Meta:
         abstract = True
+        ordering = ["name"]
 
 
 class PrimaryCategory(BaseChoiceField):
-    pass
+    class Meta:
+        verbose_name_plural = "primary categories"
+        ordering = ["name"]
 
 
 class SecondaryCategory(BaseChoiceField):
-    pass
+    class Meta:
+        verbose_name_plural = "secondary categories"
+        ordering = ["name"]
 
 
 class Language(BaseChoiceField):
@@ -261,7 +290,41 @@ class Script(BaseChoiceField):
 
 
 class Century(BaseChoiceField):
-    pass
+    # The century is represented as a string that might be either a (negative
+    # or positive) number or the word "unknown".
+
+    century_number = models.IntegerField(null=True, blank=True, editable=False)
+    """The century as a number, for sorting purposes. Automatically generated."""
+
+    @classmethod
+    def _to_number(cls, century: str) -> Optional[int]:
+        """Return the century as an integer, or None if it is set as
+        unknown. Raises ValueError if value is invalid."""
+        if century == "unknown":
+            return None
+        else:
+            return int(century)
+
+    def save(self, *args, **kwargs) -> None:
+        try:
+            number = self._to_number(self.name)
+        except ValueError:
+            pass
+        else:
+            self.century_number = number
+        return super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        if self.century_number:
+            adbc = "AD" if self.century_number >= 0 else "BC"
+            return f"{abs(self.century_number)} {adbc}"
+        else:
+            return self.name
+    
+    class Meta:
+        verbose_name_plural = "centuries"
+        ordering = ["century_number"]
+
 
 
 def import_dataset(input_file):
@@ -274,7 +337,7 @@ def import_dataset(input_file):
             keys = [cell for cell in row if cell]
             continue
         row_dict = {k: row[i] for i, k in enumerate(keys)}
-        if row_dict['source'] == None:
+        if row_dict['source'] is None:
             # do not register rows with empty source field
             # if previous row had empty source field too, stop reading
             if source_empty:

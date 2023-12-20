@@ -2,11 +2,12 @@ from pathlib import Path
 from os.path import join
 import tempfile
 import shutil
+import pytest
 
 from django.test import TestCase
 
-from .pleiades import PleiadesFetcher, PleiadesError
-from .models import import_dataset, Record
+from .pleiades import PleiadesFetcher
+from .models import Century, import_dataset, Record
 from .utils import to_decimal
 
 TESTDATA_LOCATION = join(Path(__file__).parent, 'testdata')
@@ -31,8 +32,8 @@ class PleiadesTest(TestCase):
             place = fetcher.fetch(48210385)
             self.assertTrue('reprPoint' in place)
             # Test if nonexisting ID raises error
-            with self.assertRaises(PleiadesError):
-                fetcher.fetch(5)
+            place = fetcher.fetch(5)
+            assert place is None
 
 
 class RecordTest(TestCase):
@@ -40,11 +41,10 @@ class RecordTest(TestCase):
 
     def test_data_import(self):
         import_dataset(self.TESTDATA_FILE)
-        assert Record.objects.count() == 3
+        assert Record.objects.count() == 7
 
 
-class DecimalConversionTest(TestCase):
-
+class TestDecimalConversion:
     def test_conversion(self):
         test_cases = [
             "39˚39' 4''N",
@@ -57,3 +57,30 @@ class DecimalConversionTest(TestCase):
         for t in test_cases:
             assert to_decimal(t)
 
+
+class TestCentury:
+    def test_to_number_negative(self):
+        assert Century._to_number("-3") == -3
+
+    def test_to_number_positive(self):
+        assert Century._to_number("3") == 3
+    
+    def test_to_number_unknown(self):
+        assert Century._to_number("unknown") is None
+
+    def test_to_number_invalid(self):
+        with pytest.raises(ValueError):
+            Century._to_number("hallo")
+
+    @pytest.mark.django_db
+    def test_save(self):
+        century = Century(name="-3")
+        century.save()
+        assert century.century_number == -3
+
+    @pytest.mark.django_db
+    def test_save_invalid(self):
+        century = Century(name="hallo")
+        century.save()
+        # Saving should never cause exception
+        assert century.century_number is None
