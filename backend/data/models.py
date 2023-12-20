@@ -351,6 +351,5 @@ def import_dataset(input_file):
         Record.objects.create_record(
             row_dict, place
         )
-        print(index)
 
     
