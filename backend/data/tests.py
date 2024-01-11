@@ -1,5 +1,6 @@
 from pathlib import Path
 from os.path import join
+import json
 import tempfile
 import shutil
 import pytest
@@ -84,3 +85,17 @@ class TestCentury:
         century.save()
         # Saving should never cause exception
         assert century.century_number is None
+
+
+class TestSerializer(TestCase):
+    def setUp(self):
+        TESTDATA_FILE = join(TESTDATA_LOCATION, 'SampleData.xlsx')
+        import_dataset(TESTDATA_FILE)
+
+    def test_choice_field_serializer(self):
+        response = self.client.get('/api/records/')
+        serialized = json.loads(response.content)
+        assert type(serialized[0]['languages']) == list
+        assert type(serialized[0]['scripts']) == list
+        assert type(serialized[0]['estimated_centuries']) == list
+        assert type(serialized[0]['languages'][0]) == str
