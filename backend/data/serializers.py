@@ -20,6 +20,8 @@ class RecordSerializer(serializers.ModelSerializer):
     area = serializers.CharField(source='place.area.name', allow_null=True)
     region = serializers.CharField(source='place.region.name', allow_null=True)
     coordinates = PointField(source='place.coordinates', allow_null=True)
+    category1 = serializers.CharField(source='category1.name', allow_null=True)
+    category2 = serializers.CharField(source='category2.name', allow_null=True)
     languages = ChoiceField(many=True)
     scripts = ChoiceField(many=True)
     estimated_centuries = ChoiceField(many=True)
@@ -29,7 +31,7 @@ class RecordSerializer(serializers.ModelSerializer):
         geo_field = 'place.coordinates'
         fields = [
             'source', 'languages', 'scripts', 'place_name',
-            'area', 'region', 'coordinates',
+            'area', 'region', 'coordinates', 'category1', 'category2',
             'period', 'estimated_centuries', 'mentioned_placenames',
             'inscriptions_count', 'religious_profession', 'sex_dedicator',
             'sex_deceased', 'symbol', 'comments', 'inscription', 'transcription'
