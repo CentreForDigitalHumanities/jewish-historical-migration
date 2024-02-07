@@ -22,9 +22,10 @@ from rest_framework import routers
 
 from .index import index
 from .proxy_frontend import proxy_frontend
+from data.views import RecordViewSet
 
 api_router = routers.DefaultRouter()  # register viewsets with this router
-
+api_router.register(r'records', RecordViewSet)
 
 if settings.PROXY_FRONTEND:
     spa_url = re_path(r'^(?P<path>.*)$', proxy_frontend)
