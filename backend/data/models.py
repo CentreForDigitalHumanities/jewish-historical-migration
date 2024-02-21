@@ -78,12 +78,7 @@ class PlaceManager(models.Manager):
                 )
         if coordinates is None:
             coordinates = place.fetch_from_document(location_sheet, row_dict['own id '])
-        if coordinates and coordinates[0] and coordinates[1]:
-            # Convert to point (longitude, latitude)
-            point = Point(
-                float(coordinates[1]), float(coordinates[0])
-            )
-            place.coordinates = point
+        place.coordinates = coordinates
         place.save()
         return place
 
@@ -104,8 +99,13 @@ class Place(models.Model):
     def __str__(self):
         return self.name
 
-    def fetch_from_pleiades(self) -> Optional[List[float]]:
-        ''' get Pleiades coordinates (latitude, longitude) '''
+    def fetch_from_pleiades(self) -> Optional[Point]:
+        ''' get Pleiades coordinates as a Point, or None if they cannot be 
+        determined. '''
+        # Pleiades JSON entries contain an attribute reprPoint, which contains
+        # the coordinates as an array with first the longitude, then the 
+        # latitude (first x, then y). This is the reverse of the order that
+        # is shown on the public web pages of Pleiades!
         if not self.pleiades_id:
             return None
         pleiades_info = pleiades_fetcher.fetch(self.pleiades_id)
@@ -116,16 +116,25 @@ class Place(models.Model):
                     f"Pleiades object {self.pleiades_id} found but it has no "
                     "coordinates."
                 )
-            return reprpoint
+                return None
+            else:
+                # Point expects first x, then y
+                return Point(float(reprpoint[0]), float(reprpoint[1]))
         else:
             # Not found
+            logger.warning(
+                f"Pleiades object {self.pleiades_id} not found."
+            )
             return None
     
-    def fetch_from_document(self, location_sheet, identifier):
+    def fetch_from_document(self, location_sheet, identifier) -> Optional[Point]:
         ''' return coordinates from sheet with location info:
         latitute in column 4, longitude in column 5
         '''
-        return next(((to_decimal(row[4]), to_decimal(row[5])) for row in location_sheet.values if row[0] == identifier), None)
+        coordinates = next(((to_decimal(row[4]), to_decimal(row[5])) for row in location_sheet.values if row[0] == identifier), None)
+        if coordinates is not None:
+            # Point expects first x (longitude), then y (latitude)
+            return Point(coordinates[1], coordinates[0])
 
     def save(self, *args, **kwargs) -> None:
         super().save(*args, **kwargs)
