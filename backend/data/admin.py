@@ -1,9 +1,40 @@
 from django.contrib import admin
+from django import forms
+
+from django_admin_search.admin import AdvancedSearchAdmin
 
 from .models import (
     Area, Region, Place, Record, PrimaryCategory, SecondaryCategory,
     Language, Script, Century
 )
+
+
+class RecordSearchForm(forms.Form):
+    source = forms.CharField(required=False, widget=forms.TextInput(
+        attrs={ 
+            'filter_method': '__icontains',
+        }
+    ))
+    place = forms.CharField(required=False, widget=forms.TextInput(
+        attrs={ 
+            'filter_method': '__name__icontains',
+        }
+    ))
+    mentioned_placenames = forms.CharField(required=False, widget=forms.TextInput(
+        attrs={ 
+            'filter_method': '__icontains',
+        }
+    ))
+    religious_profession = forms.CharField(required=False, widget=forms.TextInput(
+        attrs={ 
+            'filter_method': '__icontains',
+        }
+    ))
+    religious_symbol = forms.CharField(required=False, widget=forms.TextInput(
+        attrs={ 
+            'filter_method': '__icontains',
+        }
+    ))
 
 
 @admin.action(description="Fetch information from Pleiades")
@@ -30,17 +61,18 @@ class RegionAdmin(admin.ModelAdmin):
     pass
 
 @admin.register(Record)
-class RecordAdmin(admin.ModelAdmin):
+class RecordAdmin(AdvancedSearchAdmin):
     list_display = [
         'source', 'area', 'region', 'place', 'category1', 
         'category2', 'period', 'inscriptions_count'
     ]
     list_filter = [
-        'area', 'region', 'estimated_centuries', 'languages', 'scripts', 
-        'category1', 'category2'
+        'area', 'region', 'estimated_centuries', 'languages', ('scripts', admin.RelatedOnlyFieldListFilter), 
+        'category1', 'category2', 'sex_dedicator', 'sex_deceased'
     ]
     list_select_related = ["place", "category1", "category2"]
     ordering = ['source']
+    search_form = RecordSearchForm
 
 
 admin.site.register(PrimaryCategory)

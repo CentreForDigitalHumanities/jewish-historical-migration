@@ -207,11 +207,19 @@ class RecordManager(models.Manager):
         return record
 
 class Record(models.Model):
-
-    def __str__(self):
-        source = self.source if self.source else "(unknown source"
-        name = self.place.name if self.place and self.place.name else "(unknown place)"
-        return '{} {}'.format(source, name)
+    FEMALE = "female"
+    MALE = "male"
+    FEMALE_CHILD = "female-child"
+    MALE_CHILD = "male-child"
+    CHILD = "child"
+    SEX_CHOICES = [
+        ("", "-"),
+        (FEMALE, "Female"),
+        (MALE, "Male"),
+        (FEMALE_CHILD, "Female (child)"),
+        (MALE_CHILD, "Male (child)"),
+        (CHILD, "Child"),
+    ]
 
     source = models.CharField(max_length=255, unique=True)
     languages = models.ManyToManyField("Language")
@@ -224,8 +232,8 @@ class Record(models.Model):
     inscriptions_count = models.IntegerField(default=0)
     mentioned_placenames = models.CharField(max_length=255, blank=True, default='')
     religious_profession = models.CharField(max_length=255, blank=True, default='')
-    sex_dedicator = models.CharField(max_length=255, blank=True, default='')
-    sex_deceased = models.CharField(max_length=255, blank=True, default='')
+    sex_dedicator = models.CharField(max_length=255, choices=SEX_CHOICES, blank=True, default='')
+    sex_deceased = models.CharField(max_length=255, choices=SEX_CHOICES, blank=True, default='')
     symbol = models.CharField(verbose_name="religious symbol", max_length=255, blank=True, default='')
     comments = models.TextField(blank=True, default='')
     inscription = models.TextField(blank=True, default='')
@@ -241,6 +249,11 @@ class Record(models.Model):
         self.area = str(self.place.area) if self.place else None
         self.region = str(self.place.region) if self.place else None
         return super().save(*args, **kwargs)
+
+    def __str__(self):
+        source = self.source if self.source else "(unknown source"
+        name = self.place.name if self.place and self.place.name else "(unknown place)"
+        return '{} {}'.format(source, name)
 
 
 class ChoiceFieldManager(models.Manager):
