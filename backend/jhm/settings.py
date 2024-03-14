@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.gis',
     'livereload',
     'django.contrib.staticfiles',
+    'django_admin_search',
     'rest_framework',
     'revproxy',
     'data',
