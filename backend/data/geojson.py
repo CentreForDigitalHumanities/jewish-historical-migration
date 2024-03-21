@@ -6,18 +6,9 @@ from pathlib import Path
 from typing import Dict, List, Union, Optional
 
 import data.models as models
+from .serializers import RecordSerializer
 
 Feature = Dict[str, any]
-
-
-@dataclass
-class RecordData:
-    languages: Optional[str]
-    scripts: Optional[str]
-    category1: Optional[str]
-    category2: Optional[str]
-    period: Optional[str]
-
 
 
 @dataclass
@@ -28,7 +19,7 @@ class FeatureData:
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     pleiades: Optional[int] = None
-    records: List[RecordData] = field(default_factory=list)
+    record_data: List[Dict] = field(default_factory=list)
 
     def to_geojson_feature(self, number_of_inscriptions: Union[int, str]) -> \
             Optional[Feature]:
@@ -42,9 +33,11 @@ class FeatureData:
                 ]  # GeoJSON uses this order but it is different to daily use
             },
             'properties': {
+                'placename': self.placename,
                 'Province_region': self.province_region,
                 'area': self.area,
-                'inscriptions-count': number_of_inscriptions
+                'inscriptions-count': number_of_inscriptions,
+                'records': self.record_data,
             }
         }
         if self.pleiades:
@@ -54,19 +47,27 @@ class FeatureData:
 
 def export_geojson(filepath: Path) -> None:
     """Export to GeoJSON."""
-    places = models.Place.objects.all()
+    places = models.Place.objects.prefetch_related("records").all()
     features: List[Feature] = []
     # Go through list of places to get one feature per place
     for place in places:
         assert isinstance(place, models.Place)
+        records: List[models.Record] = list(place.records.all())
+        if len(records) == 0:
+            # We do not want to plot places on the map for which there are no records.
+            continue
         area = place.area.name if place.area else ""
         province_region = place.region.name if place.region else ""
         fd = FeatureData(area=area, province_region=province_region, placename=place.name,
                          pleiades=place.pleiades_id)
         if place.coordinates:
             fd.longitude, fd.latitude = place.coordinates.coords  # Point stores first x, then y
-        records: List[models.Record] = list(place.records.all())
-        number_of_inscriptions = ' + '.join([str(record.inscriptions_count) for record in records])
+        record_data: List[Dict] = []
+        number_of_inscriptions = 0
+        for record in records:
+            number_of_inscriptions += record.inscriptions_count
+            record_data.append(RecordSerializer(record).data)
+        fd.record_data = record_data
         features.append(fd.to_geojson_feature(number_of_inscriptions))
 
     geojson: Dict[str, Union[str, List[Feature]]] = {
