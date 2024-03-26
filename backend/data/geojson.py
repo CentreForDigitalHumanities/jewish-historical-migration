@@ -45,8 +45,8 @@ class FeatureData:
         return feature
 
 
-def export_geojson(filepath: Path) -> None:
-    """Export to GeoJSON."""
+def create_geojson() -> Dict:
+    """Export to GeoJSON as a Python dictionary."""
     places = models.Place.objects.prefetch_related("records").all()
     features: List[Feature] = []
     # Go through list of places to get one feature per place
@@ -74,6 +74,9 @@ def export_geojson(filepath: Path) -> None:
         "type": "FeatureCollection",
         "features": features,
     }
+    return geojson
 
+
+def export_geojson(filepath: Path, ) -> None:
     with open(filepath, 'w') as f:
-        json.dump(geojson, f, indent=4)
+        json.dump(create_geojson(), f, indent=4)
