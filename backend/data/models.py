@@ -338,8 +338,8 @@ class Century(BaseChoiceField):
 
     def __str__(self) -> str:
         if self.century_number:
-            adbc = "AD" if self.century_number >= 0 else "BC"
-            return f"{abs(self.century_number)} {adbc}"
+            ce_or_bce = "CE" if self.century_number >= 0 else "BCE"
+            return f"{abs(self.century_number)} {ce_or_bce}"
         else:
             return self.name
     
