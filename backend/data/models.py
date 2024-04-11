@@ -206,6 +206,7 @@ class RecordManager(models.Manager):
         record.save()
         return record
 
+
 class Record(models.Model):
     FEMALE = "female"
     MALE = "male"
@@ -232,8 +233,8 @@ class Record(models.Model):
     inscriptions_count = models.IntegerField(default=0)
     mentioned_placenames = models.CharField(max_length=255, blank=True, default='')
     religious_profession = models.CharField(max_length=255, blank=True, default='')
-    sex_dedicator = models.CharField(verbose_name="sexe dedicator", max_length=255, choices=SEX_CHOICES, blank=True, default='')
-    sex_deceased = models.CharField(verbose_name="sexe deceased", max_length=255, choices=SEX_CHOICES, blank=True, default='')
+    sex_dedicator = models.CharField(verbose_name="sex dedicator", max_length=255, choices=SEX_CHOICES, blank=True, default='')
+    sex_deceased = models.CharField(verbose_name="sex deceased", max_length=255, choices=SEX_CHOICES, blank=True, default='')
     symbol = models.CharField(verbose_name="religious symbol", max_length=255, blank=True, default='')
     comments = models.TextField(blank=True, default='')
     inscription = models.TextField(blank=True, default='')
@@ -251,7 +252,7 @@ class Record(models.Model):
         return super().save(*args, **kwargs)
 
     def __str__(self):
-        source = self.source if self.source else "(unknown source"
+        source = self.source if self.source else "(unknown source)"
         name = self.place.name if self.place and self.place.name else "(unknown place)"
         return '{} {}'.format(source, name)
 
