@@ -30,7 +30,7 @@ class RecordSearchForm(forms.Form):
             'filter_method': '__icontains',
         }
     ))
-    religious_symbol = forms.CharField(required=False, widget=forms.TextInput(
+    symbol = forms.CharField(required=False, widget=forms.TextInput(
         attrs={ 
             'filter_method': '__icontains',
         }
@@ -59,6 +59,7 @@ class AreaAdmin(admin.ModelAdmin):
 @admin.register(Region)
 class RegionAdmin(admin.ModelAdmin):
     pass
+
 
 @admin.register(Record)
 class RecordAdmin(AdvancedSearchAdmin):
