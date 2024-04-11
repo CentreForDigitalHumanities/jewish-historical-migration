@@ -4,6 +4,13 @@
 
 An interface for creating a dataset that models Jewish Historical Migration. For a project description, see: https://www.uu.nl/en/news/new-interactive-platform-for-researching-historical-jewish-migration-data
 
+## Usage notes
+
+This application contains a Django backend and an Angular frontend, but currently only the backend is used. The task of the backend is to allow import and editing of the dataset using the default Django admin interface, and to make it accessible to I-Analyzer through a REST API (using `django-rest-framework`).
+
+The only endpoint of the REST API is `/api/records/`, which is a read-only viewset that is accessible to any authenticated user. Authentication works via session authentication or via token authentication. To get a token for a given user, run the admin command `manage.py token <username>`. The user will be created if it does not yet exist.
+
+Importing the dataset from the original Excel dataset happens through an admin command as well: `manage.py import_dataset <path>`.
 
 ## Before you start
 
