@@ -10,5 +10,5 @@ class RecordViewSet(viewsets.ReadOnlyModelViewSet):
     """
     queryset = Record.objects.all()
     serializer_class = RecordSerializer
-    # permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
