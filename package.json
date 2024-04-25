@@ -1,6 +1,6 @@
 {
     "name": "jewish-historical-migration",
-    "version": "0.2.1",
+    "version": "0.2.2",
     "description": "An interface for creating a dataset that models Jewish Historical Migration",
     "author": "Utrecht University",
     "license": "BSD-3-Clause",
