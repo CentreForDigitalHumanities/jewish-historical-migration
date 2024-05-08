@@ -1,8 +1,12 @@
+import tempfile
+
 from django.contrib import admin
 from django import forms
+from django.http import HttpResponse
 
 from django_admin_search.admin import AdvancedSearchAdmin
 
+from .geojson import export_geojson
 from .models import (
     Area, Region, Place, Record, PrimaryCategory, SecondaryCategory,
     Language, Script, Century
@@ -42,6 +46,7 @@ def fetch_from_pleiades(modeladmin, request, queryset):
     for item in queryset:
         item.fetch_from_pleiades()
         item.save()
+
 
 @admin.register(Place)
 class PlaceAdmin(admin.ModelAdmin):

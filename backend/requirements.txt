@@ -6,12 +6,13 @@
 #
 --no-binary psycopg2
 
-asgiref==3.7.2
+asgiref==3.8.1
     # via django
 backports-zoneinfo==0.2.1 ; python_version < "3.9"
     # via
     #   -r requirements.in
     #   django
+    #   djangorestframework
 certifi==2024.2.2
     # via requests
 charset-normalizer==3.3.2
@@ -29,7 +30,7 @@ django-livereload-server==0.5.1
     # via -r requirements.in
 django-revproxy==0.12.0
     # via -r requirements.in
-djangorestframework==3.14.0
+djangorestframework==3.15.1
     # via -r requirements.in
 et-xmlfile==1.1.0
     # via openpyxl
@@ -45,13 +46,13 @@ iniconfig==2.0.0
     # via pytest
 openpyxl==3.1.2
     # via -r requirements.in
-packaging==23.2
+packaging==24.0
     # via pytest
 pluggy==1.4.0
     # via pytest
 psycopg2==2.9.9
     # via -r requirements.in
-pytest==8.0.2
+pytest==8.1.1
     # via
     #   -r requirements.in
     #   pytest-django
@@ -60,8 +61,6 @@ pytest-django==4.8.0
     # via -r requirements.in
 pytest-xdist==3.5.0
     # via -r requirements.in
-pytz==2024.1
-    # via djangorestframework
 requests==2.31.0
     # via -r requirements.in
 sqlparse==0.4.4
