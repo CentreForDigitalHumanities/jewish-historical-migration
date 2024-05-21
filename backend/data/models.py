@@ -223,6 +223,8 @@ class Record(models.Model):
     ]
 
     source = models.CharField(max_length=255, unique=True)
+    publication = models.ForeignKey("Publication", on_delete=models.SET_NULL, null=True, blank=True)
+    location_in_publication = models.CharField(max_length=255, blank=True)
     languages = models.ManyToManyField("Language")
     scripts = models.ManyToManyField("Script")
     place = models.ForeignKey(to=Place, null=True, blank=True, on_delete=models.SET_NULL, related_name="records")
@@ -348,6 +350,12 @@ class Century(BaseChoiceField):
         verbose_name_plural = "centuries"
         ordering = ["century_number"]
 
+
+class Publication(models.Model):
+    identifier = models.CharField(max_length=255, unique=True)
+
+    def __str__(self) -> str:
+        return self.identifier
 
 
 def import_dataset(input_file):
