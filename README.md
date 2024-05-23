@@ -1,8 +1,6 @@
 # Jewish Historical Migration
 
-[![Actions Status](https://github.com/UUDigitalHumanitieslab/jewish-historical-migration/workflows/Unit%20tests/badge.svg)](https://github.com/UUDigitalHumanitieslab/jewish-historical-migration/actions)
-
-An interface for creating a dataset that models Jewish Historical Migration. For a project description, see: https://www.uu.nl/en/news/new-interactive-platform-for-researching-historical-jewish-migration-data
+An interface for creating and curating a dataset to study Jewish Historical Migration. See [project description](https://www.uu.nl/en/news/new-interactive-platform-for-researching-historical-jewish-migration-data).
 
 ## Usage notes
 
