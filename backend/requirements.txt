@@ -33,8 +33,10 @@ idna==3.11
     # via requests
 ijson==3.4.0.post0
     # via -r requirements.in
-iniconfig==2.3.0
-    # via pytest
+iniconfig==2.1.0
+    # via
+    #   -r requirements.in
+    #   pytest
 openpyxl==3.1.5
     # via -r requirements.in
 packaging==25.0

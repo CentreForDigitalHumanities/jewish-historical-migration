@@ -5,6 +5,7 @@ django-revproxy>=0.10.0
 openpyxl
 psycopg
 pytest
+iniconfig==2.1.0
 pytest-django
 pytest-xdist
 requests
