@@ -1,11 +1,11 @@
-backports.zoneinfo;python_version<"3.9"
-Django>=4.0.1,<5
+Django>=5.2,<6
 djangorestframework
 django-livereload-server
 django-revproxy>=0.10.0
 openpyxl
-psycopg2 --no-binary psycopg2
+psycopg
 pytest
+iniconfig
 pytest-django
 pytest-xdist
 requests
