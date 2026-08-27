@@ -13,24 +13,18 @@ Including another URLconf
     1. Import the include() function: from django.conf.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from data.views import RecordViewSet
 from django.conf import settings
-from django.urls import path, re_path, include
 from django.contrib import admin
+from django.urls import include, path, re_path
 from django.views.generic import RedirectView
-
 from rest_framework import routers
 
 from .index import index
 from .proxy_frontend import proxy_frontend
-from data.views import RecordViewSet
 
 api_router = routers.DefaultRouter()  # register viewsets with this router
 api_router.register(r'records', RecordViewSet)
-
-if settings.PROXY_FRONTEND:
-    spa_url = re_path(r'^(?P<path>.*)$', proxy_frontend)
-else:
-    spa_url = re_path(r'', index)
 
 urlpatterns = [
     path('admin', RedirectView.as_view(url='/admin/', permanent=True)),
@@ -42,5 +36,14 @@ urlpatterns = [
         'rest_framework.urls',
         namespace='rest_framework',
     )),
-    spa_url,  # catch-all; unknown paths to be handled by a SPA
 ]
+
+if settings.PROXY_FRONTEND:
+    # Catch-all: unknown paths are handled by the proxied SPA.
+    urlpatterns.append(re_path(r'^(?P<path>.*)$', proxy_frontend))
+elif settings.SERVE_STATIC_FRONTEND:
+    # Catch-all: unknown paths are handled by the compiled SPA.
+    urlpatterns.append(re_path(r'^.*$', index))
+else:
+    # The backend-only application starts at Django's admin interface.
+    urlpatterns.append(path('', RedirectView.as_view(url='/admin/')))

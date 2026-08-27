@@ -30,7 +30,7 @@ The `jewish-historical-migration` package is our "project" in Django jargon. It 
 
 The `index` module contains a special view function which is meant to facilitate a client side application. This view will attempt to find an `index.html` file in the static folders and return it as the response. In the `urls` module, this view is configured as a global fallback route. The `index.html` should launch a client side (frontend) application that handles routing.
 
-**Note:** this backend application doesn't—and *shouldn't*—contain a root `index.html` in any of its static folders. Instead, you should add an external directory to Django's `STATICFILES_DIRS` setting which contains an `index.html` in its root, if you wish to combine this backend application with your frontend application of choice.
+**Note:** this backend application doesn't—and *shouldn't*—contain a root `index.html` in any of its static folders. Instead, add an external directory to Django's `STATICFILES_DIRS` setting which contains an `index.html` in its root and set `SERVE_STATIC_FRONTEND = True` if you want to combine this backend application with your frontend application of choice. Without a proxied or compiled frontend, the root URL redirects to the Django admin interface.
 
 As in any Django application, you may add an arbitrary number of "application" (Django jargon) packages next to the `jewish-historical-migration` package. Each "application" may contain its own `models` and `migrations`, as well as `admin`, `signals`, `validators`, `urls` etcetera. A `views` module may contain DRF [viewsets][3] instead of native Django views, in which case there should also be a [`serializers`][4] module which intermediates between the `models` and the `views`.
 

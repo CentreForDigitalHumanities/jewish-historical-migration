@@ -141,6 +141,7 @@ STATIC_URL = '/static/'
 
 STATICFILES_DIRS: List[str] = []
 PROXY_FRONTEND = None
+SERVE_STATIC_FRONTEND = False
 
 # The directory to save external data, such as Pleiades data
 EXTERNAL_DATA_DIRECTORY = BASE_DIR / 'external_data'

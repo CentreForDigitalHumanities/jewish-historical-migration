@@ -26,10 +26,16 @@ You need to install the following software:
 [1]: https://wiki.python.org/moin/WindowsCompilers
 [2]: https://pypi.org/project/selenium/#drivers
 
-## Setup with Docker
-Alternatively, you can run the application via Docker:
-1. Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) and start it.
-2. Make an .env file next to this README, which defines the configuration for the Postgres database, as well as the directory in which the source (Excel) data is located.
+## Setup with containers
+
+The backend-only application can be run locally with Podman/Docker and the
+`docker-compose` provider. Examples use podman.
+
+1. Install Podman and `docker-compose`. `podman compose` is a wrapper that runs
+   the configured external Compose provider.
+2. Copy `.env.example` to `.env` and configure the Postgres database and the
+   directory containing the source Excel data:
+
 ```
 SQL_HOST=db
 SQL_PORT=5432
@@ -38,11 +44,30 @@ SQL_DATABASE=jewishmigration
 SQL_PASSWORD=topsecret
 DATA_DIR=/location/of/source/data/on/your/machine
 ```
-3. Run `docker-compose up` from the directory of this README. This will pull images from the Docker registry and start containers based on these images. This will take a while to set up the first time. To stop, hit `ctrl-c`, run `docker-compose down` in another terminal, or use the Docker Desktop dashboard.
-4. If you need to reinstall libraries via pip or yarn, use `docker-compose up --build`.
 
-Note: you can also call the .env file .myenv and specify this during startup:
-`docker-compose --env-file .myenv up`
+3. Build and start the services from this directory:
+
+```console
+$ podman compose up --build
+```
+
+   The database is initialized by the Postgres image and Django migrations run
+   whenever the backend starts. Visit http://localhost:8100/.
+4. Create the first administrator explicitly:
+
+```console
+$ podman compose exec backend python manage.py createsuperuser
+```
+
+Other application setup and data-management commands use the same running
+backend container:
+
+```console
+$ podman compose exec backend python manage.py token USERNAME
+$ podman compose exec backend python manage.py import_dataset /data/FILENAME.xlsx
+```
+
+`bootstrap.py` is omitted from backend container since it bootstraps a local full-stack development environment.
 
 ## How it works
 

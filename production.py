@@ -1,5 +1,6 @@
 import os
 import os.path as op
+
 from collect import *
 
 here = op.dirname(op.abspath(__file__))
@@ -9,6 +10,7 @@ STATIC_ROOT = None
 
 
 PROXY_FRONTEND = None  # use statically compiled files
+SERVE_STATIC_FRONTEND = True
 
 # Github Actions:
 if os.environ.get('CI'):
