@@ -1,5 +1,5 @@
 # Base image
-FROM python:3.8
+FROM python:3.12
 ENV PYTHONUNBUFFERED 1
 RUN apt-get -y update
 RUN apt-get -y install gdal-bin

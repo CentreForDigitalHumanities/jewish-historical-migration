@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgis/postgis
+    image: postgis/postgis:18-3.6
     environment:
       - POSTGRES_DB=${SQL_DATABASE}
       - POSTGRES_USER=${SQL_USER}
@@ -11,7 +11,7 @@ services:
       - PGDATABASE=${SQL_DATABASE}
       - PGPASSWORD=${SQL_PASSWORD}
     volumes:
-      - jw-db:/var/lib/postgresql/data/
+      - jw-db:/var/lib/postgresql/
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${SQL_USER}"]
       interval: 5s
