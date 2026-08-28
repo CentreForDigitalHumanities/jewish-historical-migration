@@ -77,6 +77,13 @@ the container setup is for development use only:
 pip install -r backend/requirements.txt
 ```
 
+## Releases
+
+The version shown in the Django admin footer is maintained in
+`backend/jhm/__init__.py`. Before creating a release, update `__version__` in
+the release commit so it exactly matches the unprefixed Git tag, such as
+`0.3.0`, and then tag that commit.
+
 ## Application commands
 
 The only API endpoint is `/api/records/`, a read-only viewset available to
