@@ -13,26 +13,17 @@ Including another URLconf
     1. Import the include() function: from django.conf.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.conf import settings
-from django.urls import path, re_path, include
-from django.contrib import admin
-from django.views.generic import RedirectView
-
-from rest_framework import routers
-
-from .index import index
-from .proxy_frontend import proxy_frontend
 from data.views import RecordViewSet
+from django.contrib import admin
+from django.urls import include, path
+from django.views.generic import RedirectView
+from rest_framework import routers
 
 api_router = routers.DefaultRouter()  # register viewsets with this router
 api_router.register(r'records', RecordViewSet)
 
-if settings.PROXY_FRONTEND:
-    spa_url = re_path(r'^(?P<path>.*)$', proxy_frontend)
-else:
-    spa_url = re_path(r'', index)
-
 urlpatterns = [
+    path('', RedirectView.as_view(url='/admin/')),
     path('admin', RedirectView.as_view(url='/admin/', permanent=True)),
     path('api', RedirectView.as_view(url='/api/', permanent=True)),
     path('api-auth', RedirectView.as_view(url='/api-auth/', permanent=True)),
@@ -42,5 +33,4 @@ urlpatterns = [
         'rest_framework.urls',
         namespace='rest_framework',
     )),
-    spa_url,  # catch-all; unknown paths to be handled by a SPA
 ]

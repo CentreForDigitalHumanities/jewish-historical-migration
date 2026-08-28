@@ -5,6 +5,7 @@ import tempfile
 import shutil
 import pytest
 
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 
 from .pleiades import PleiadesFetcher
@@ -89,11 +90,17 @@ class TestCentury:
 
 class TestSerializer(TestCase):
     def setUp(self):
+        user = get_user_model().objects.create_user(
+            username='serializer-test',
+        )
+        self.client.force_login(user)
+
         TESTDATA_FILE = join(TESTDATA_LOCATION, 'SampleData.xlsx')
         import_dataset(TESTDATA_FILE)
 
     def test_choice_field_serializer(self):
         response = self.client.get('/api/records/')
+        self.assertEqual(response.status_code, 200, response.content)
         serialized = json.loads(response.content)
         assert type(serialized[0]['languages']) == list
         assert type(serialized[0]['scripts']) == list

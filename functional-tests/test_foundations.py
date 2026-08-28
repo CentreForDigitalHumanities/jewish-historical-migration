@@ -1,18 +1,28 @@
-def test_jewish-historical-migration_frontend(browser, base_address):
+from selenium.webdriver.common.by import By
+
+
+def test_root_redirects_to_admin(browser, base_address):
     browser.get(base_address)
-    assert 'Jewish Historical Migration' in browser.title
+    assert browser.current_url == base_address + 'admin/login/?next=/admin/'
+    assert 'Django' in browser.title
+    footer = browser.find_element(By.CSS_SELECTOR, '#footer .admin-footer')
+    assert footer.is_displayed()
+    assert 'Jewish Historical Migration' in footer.text
+    assert 'Source code (BSD 3-Clause License)' in footer.text
+    assert 'Version ' in footer.text
+    assert 'Research Software Lab' in footer.text
 
 
-def test_jewish-historical-migration_admin(browser, admin_address):
+def test_admin(browser, admin_address):
     browser.get(admin_address)
     assert 'Django' in browser.title
 
 
-def test_jewish-historical-migration_api(browser, api_address):
+def test_api(browser, api_address):
     browser.get(api_address)
     assert 'Api Root' in browser.title
 
 
-def test_jewish-historical-migration_api_auth(browser, api_auth_address):
+def test_api_auth(browser, api_auth_address):
     browser.get(api_auth_address + 'login/')
     assert 'Django REST framework' in browser.title

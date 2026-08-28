@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgis/postgis
+    image: postgis/postgis:18-3.6
     environment:
       - POSTGRES_DB=${SQL_DATABASE}
       - POSTGRES_USER=${SQL_USER}
@@ -11,7 +11,7 @@ services:
       - PGDATABASE=${SQL_DATABASE}
       - PGPASSWORD=${SQL_PASSWORD}
     volumes:
-      - jw-db:/var/lib/postgresql/data/
+      - jw-db:/var/lib/postgresql/
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${SQL_USER}"]
       interval: 5s
@@ -20,6 +20,7 @@ services:
   backend:
     build:
       context: ./backend
+      target: development
     depends_on:
       db:
         condition: service_healthy
@@ -38,7 +39,27 @@ services:
       - type: bind
         source: $DATA_DIR
         target: /data
-    command: bash -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8100"
+    command: bash -c "python manage.py migrate && exec python manage.py runserver 0.0.0.0:8100"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8100/admin/login/', timeout=2)"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+  functional-tests:
+    profiles: ["tests"]
+    build:
+      context: ./backend
+      target: browser-tests
+    depends_on:
+      backend:
+        condition: service_healthy
+    working_dir: /functional-tests
+    volumes:
+      - type: bind
+        source: ./functional-tests
+        target: /functional-tests
+    command: pytest --base-address http://backend:8100/
 
 volumes:
   jw-db:
