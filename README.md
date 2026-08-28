@@ -52,7 +52,7 @@ backend and waits for its healthcheck before launching the browser tests:
 podman compose --profile tests run --rm functional-tests
 ```
 
-The functional tests covers the root redirect, admin, API root, and DRF login.
+The functional tests cover the root redirect, admin, API root, and DRF login.
 
 ## Python dependencies
 
