@@ -1,12 +1,25 @@
-# Base image
-FROM python:3.12
-ENV PYTHONUNBUFFERED 1
-RUN apt-get -y update
-RUN apt-get -y install gdal-bin
+FROM python:3.12-bookworm AS development
 
-# make a directory in the container
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+RUN apt-get update \
+    && apt-get install --no-install-recommends --yes gdal-bin \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /backend
-# copy files from the host system to the directory in the container
-COPY requirements.txt /backend/
-# run pip install on container
-RUN pip install -r requirements.txt
+
+COPY requirements.in requirements.txt requirements-dev.in requirements-dev.txt ./
+RUN pip install --no-cache-dir -r requirements-dev.txt
+
+FROM development AS browser-tests
+
+RUN apt-get update \
+    && apt-get install --no-install-recommends --yes chromium chromium-driver \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV CHROME_BIN=/usr/bin/chromium \
+    CHROMEDRIVER=/usr/bin/chromedriver
+
+# Keep the development environment as the default image target.
+FROM development AS default

@@ -1,13 +1,7 @@
 Django>=5.2,<6
 djangorestframework
-django-livereload-server
-django-revproxy>=0.10.0
 openpyxl
 psycopg
-pytest
-iniconfig
-pytest-django
-pytest-xdist
 requests
 ijson
 django-admin-search

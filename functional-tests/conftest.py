@@ -1,6 +1,8 @@
 import os
+
 import pytest
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service as ChromeService
 
 WEBDRIVER_INI_NAME = 'webdriver'
 BASE_ADDRESS_OPTION_NAME = 'base_address'
@@ -12,11 +14,11 @@ def pytest_addoption(parser):
         WEBDRIVER_INI_NAME,
         'Specify browsers in which the tests should run',
         type='linelist',
-        default=['Chrome' ,'Firefox'],
+        default=['Chrome'],
     )
     parser.addoption(
         '--base-address',
-        default='http://localhost:8000/',
+        default='http://localhost:8100/',
         help='specifies the base address where the application is running',
         dest=BASE_ADDRESS_OPTION_NAME,
     )
@@ -37,11 +39,17 @@ def webdriver_instance(webdriver_name):
     """
     if webdriver_name == 'Chrome':
         options = webdriver.ChromeOptions()
+        if chrome_binary := os.environ.get('CHROME_BIN'):
+            options.binary_location = chrome_binary
         options.add_argument('--headless')
         options.add_argument('--no-sandbox')
         options.add_argument('--disable-gpu')
+        options.add_argument('--disable-dev-shm-usage')
         options.add_argument('--remote-debugging-port=9222')
-        driver = webdriver.Chrome(options=options)
+        service = ChromeService(
+            executable_path=os.environ.get('CHROMEDRIVER'),
+        )
+        driver = webdriver.Chrome(options=options, service=service)
     elif webdriver_name == 'Firefox':
         options = webdriver.FirefoxOptions()
         options.add_argument('-headless')

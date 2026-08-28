@@ -20,6 +20,7 @@ services:
   backend:
     build:
       context: ./backend
+      target: development
     depends_on:
       db:
         condition: service_healthy
@@ -39,6 +40,26 @@ services:
         source: $DATA_DIR
         target: /data
     command: bash -c "python manage.py migrate && exec python manage.py runserver 0.0.0.0:8100"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8100/admin/', timeout=2)"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+  functional-tests:
+    profiles: ["tests"]
+    build:
+      context: ./backend
+      target: browser-tests
+    depends_on:
+      backend:
+        condition: service_healthy
+    working_dir: /functional-tests
+    volumes:
+      - type: bind
+        source: ./functional-tests
+        target: /functional-tests
+    command: pytest --base-address http://backend:8100/
 
 volumes:
   jw-db:

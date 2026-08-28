@@ -10,7 +10,6 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 
 import os
 from pathlib import Path
-from typing import List
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,7 +24,7 @@ SECRET_KEY = 'kxreeb3bds$oibo7ex#f3bi5r+d(1x5zljo-#ms=i2%ih-!pvn'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS: List[str] = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'backend', 'testserver']
 
 
 # Application definition
@@ -37,12 +36,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.gis',
-    'livereload',
     'django.contrib.staticfiles',
     'django_admin_search',
     'rest_framework',
     'rest_framework.authtoken',
-    'revproxy',
     'data',
 ]
 
@@ -96,9 +93,6 @@ DATABASES = {
         'PASSWORD': os.environ.get('PGPASSWORD') or 'jewish_historical_migration',
         'HOST': os.environ.get('PGHOST') or 'localhost',
         'PORT': os.environ.get('PGPORT') or '5432',
-        "TEST": {
-            "TEMPLATE": "template_postgis",
-        },
     }
 }
 
@@ -138,10 +132,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
-
-STATICFILES_DIRS: List[str] = []
-PROXY_FRONTEND = None
-SERVE_STATIC_FRONTEND = False
 
 # The directory to save external data, such as Pleiades data
 EXTERNAL_DATA_DIRECTORY = BASE_DIR / 'external_data'
