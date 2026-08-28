@@ -1,6 +1,6 @@
 def test_root_redirects_to_admin(browser, base_address):
     browser.get(base_address)
-    assert browser.current_url == base_address + 'admin/'
+    assert browser.current_url == base_address + 'admin/login/?next=/admin/'
     assert 'Django' in browser.title
 
 
